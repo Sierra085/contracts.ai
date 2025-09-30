@@ -1,3 +1,4 @@
+# Force rebuild
 from fastapi import FastAPI, UploadFile, File, Form, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -587,7 +588,7 @@ async def home(request: Request):
             </script>
         </body>
         </html>
-        """)
+        ")
 
 @app.post("/extract")
 async def extract(file: UploadFile = File(...)):
@@ -628,7 +629,7 @@ async def extract(file: UploadFile = File(...)):
 async def chat(req: ChatRequest):
     if not GEMINI_API_KEY:
         return JSONResponse(
-            {"error": "Gemini API key not configured. Please check your environment variables."},
+            {"error": "Gemini API key not configured. Please check your environment variables."}, 
             status_code=500
         )
     
@@ -674,7 +675,7 @@ Please provide a helpful, accurate, and detailed answer based on the document co
 async def analyze_risks(req: RiskAnalysisRequest):
     if not GEMINI_API_KEY:
         return JSONResponse(
-            {"error": "Gemini API key not configured. Please check your environment variables."},
+            {"error": "Gemini API key not configured. Please check your environment variables."}, 
             status_code=500
         )
     
