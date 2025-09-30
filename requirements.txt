@@ -1,0 +1,17 @@
+# Requirements for AI Reader
+streamlit
+pandas
+python-docx
+PyPDF2
+pytesseract
+pdf2image
+Pillow
+fastapi
+uvicorn[standard]
+google-generativeai
+pydantic
+requests
+PyQt5
+python-dotenv
+python-multipart
+jinja2
