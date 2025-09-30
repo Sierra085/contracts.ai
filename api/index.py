@@ -63,9 +63,258 @@ def extract_text_from_pdf_ocr(file_path):
     except Exception as e:
         raise Exception(f"OCR processing failed: {str(e)}. Make sure Tesseract and Poppler are installed.")
 
-def extract_text_from_docx(file_path):
-    doc = Document(file_path)
-    return "\n".join([para.text for para in doc.paragraphs])
+from http.server import BaseHTTPRequestHandler
+import json
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        # Serve the main HTML page
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        
+        html = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>contracts.ai</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        </head>
+        <body>
+            <div class="container mt-4">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="text-center mb-4">
+                            <i class="fas fa-robot text-primary"></i> contracts.ai
+                        </h1>
+                        <p class="text-center text-muted mb-4">Contract Risk Analysis & Document Chat with AI</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-8 mx-auto">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-upload"></i> Upload Document</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="uploadForm">
+                                    <div class="mb-3">
+                                        <label for="file" class="form-label">Choose PDF or DOCX file:</label>
+                                        <input type="file" class="form-control" id="file" accept=".pdf,.docx" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-upload"></i> Upload & Extract Text
+                                    </button>
+                                </form>
+                                <div id="uploadStatus" class="mt-3"></div>
+                                <div id="textPreview" class="mt-3" style="display: none;">
+                                    <h6>Extracted Text Preview:</h6>
+                                    <div class="border p-2" style="max-height: 150px; overflow-y: auto;">
+                                        <small id="extractedText" class="text-muted"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5><i class="fas fa-comments"></i> Chat with Document</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="chatMessages" style="height: 300px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1rem; margin-bottom: 1rem;">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> Upload a document to start chatting.
+                                    </div>
+                                </div>
+                                <div id="chatInputSection" style="display: none;">
+                                    <form id="chatForm">
+                                        <div class="input-group">
+                                            <input type="text" id="chatInput" class="form-control" placeholder="Ask a question...">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="riskAnalysisSection" class="mt-3" style="display: none;">
+                            <button id="analyzeRisksBtn" class="btn btn-warning w-100">
+                                <i class="fas fa-exclamation-triangle"></i> Analyze Contract Risks
+                            </button>
+                        </div>
+                        
+                        <div id="riskAnalysisResults" class="card mt-3" style="display: none;">
+                            <div class="card-header">
+                                <h5><i class="fas fa-shield-alt"></i> Risk Analysis Results</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="riskAnalysisContent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                let extractedText = '';
+
+                document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const file = document.getElementById('file').files[0];
+                    if (!file) return;
+                    
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    showStatus('Extracting text...', 'info');
+                    
+                    try {
+                        const response = await fetch('/api/extract', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            extractedText = result.text;
+                            showStatus('✅ Text extracted successfully!', 'success');
+                            document.getElementById('extractedText').textContent = extractedText.substring(0, 300) + '...';
+                            document.getElementById('textPreview').style.display = 'block';
+                            enableChat();
+                            document.getElementById('riskAnalysisSection').style.display = 'block';
+                        } else {
+                            showStatus('❌ Error: ' + result.error, 'danger');
+                        }
+                    } catch (error) {
+                        showStatus('❌ Upload failed: ' + error.message, 'danger');
+                    }
+                });
+
+                document.getElementById('chatForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const question = document.getElementById('chatInput').value.trim();
+                    if (!question) return;
+                    
+                    addMessage(question, 'user');
+                    document.getElementById('chatInput').value = '';
+                    
+                    const thinkingId = addMessage('🤔 AI is thinking...', 'ai');
+                    
+                    try {
+                        const response = await fetch('/api/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: extractedText, question: question })
+                        });
+                        
+                        const result = await response.json();
+                        document.getElementById(thinkingId).remove();
+                        
+                        if (response.ok) {
+                            addMessage(result.answer, 'ai');
+                        } else {
+                            addMessage('❌ ' + result.error, 'ai');
+                        }
+                    } catch (error) {
+                        document.getElementById(thinkingId).remove();
+                        addMessage('❌ Error: ' + error.message, 'ai');
+                    }
+                });
+
+                document.getElementById('analyzeRisksBtn').addEventListener('click', async () => {
+                    if (!extractedText) return;
+                    
+                    const btn = document.getElementById('analyzeRisksBtn');
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+                    
+                    try {
+                        const response = await fetch('/api/analyze-risks', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: extractedText })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            displayRiskAnalysis(result.analysis);
+                            document.getElementById('riskAnalysisResults').style.display = 'block';
+                        } else {
+                            showStatus('❌ ' + result.error, 'danger');
+                        }
+                    } catch (error) {
+                        showStatus('❌ Error: ' + error.message, 'danger');
+                    }
+                    
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Analyze Contract Risks';
+                });
+
+                function showStatus(message, type) {
+                    document.getElementById('uploadStatus').innerHTML = '<div class="alert alert-' + type + '">' + message + '</div>';
+                }
+
+                function enableChat() {
+                    document.getElementById('chatMessages').innerHTML = '<div class="alert alert-success">✅ Document loaded! Ask questions below.</div>';
+                    document.getElementById('chatInputSection').style.display = 'block';
+                }
+
+                function addMessage(content, sender) {
+                    const messageId = 'msg-' + Date.now();
+                    const isUser = sender === 'user';
+                    const bgClass = isUser ? 'bg-light' : 'bg-primary text-white';
+                    
+                    const messageHtml = '<div id="' + messageId + '" class="mb-2 p-2 rounded ' + bgClass + '">' +
+                        '<strong>' + (isUser ? '👤 You:' : '🤖 AI:') + '</strong><br>' + content + '</div>';
+                    
+                    document.getElementById('chatMessages').insertAdjacentHTML('beforeend', messageHtml);
+                    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+                    return messageId;
+                }
+
+                function displayRiskAnalysis(analysis) {
+                    let html = '';
+                    if (analysis.raw_analysis) {
+                        html = '<div class="alert alert-info"><h6>Risk Analysis:</h6><pre>' + analysis.raw_analysis + '</pre></div>';
+                    } else {
+                        html = '<div class="alert alert-warning"><h6>Overall Risk: ' + (analysis.overall_risk_level || 'Unknown') + '</h6></div>';
+                        
+                        if (analysis.key_concerns && analysis.key_concerns.length > 0) {
+                            html += '<div class="alert alert-danger"><h6>Key Concerns:</h6><ul>';
+                            analysis.key_concerns.forEach(concern => {
+                                html += '<li>' + concern + '</li>';
+                            });
+                            html += '</ul></div>';
+                        }
+                        
+                        if (analysis.summary) {
+                            html += '<div class="alert alert-info"><h6>Summary:</h6><p>' + analysis.summary + '</p></div>';
+                        }
+                    }
+                    document.getElementById('riskAnalysisContent').innerHTML = html;
+                }
+            </script>
+        </body>
+        </html>
+        """
+        
+        self.wfile.write(html.encode())
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
