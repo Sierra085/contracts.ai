@@ -14,6 +14,8 @@ if GEMINI_API_KEY:
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
+        print("do_POST method called")
+        print(f"GEMINI_API_KEY: {os.getenv('GEMINI_API_KEY')}")
         try:
             if not GEMINI_API_KEY:
                 self.send_response(500)
