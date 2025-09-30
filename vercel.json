@@ -8,12 +8,20 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "src": "/api/extract",
+      "dest": "/api/extract.py"
+    },
+    {
+      "src": "/api/chat",
+      "dest": "/api/chat.py"
+    },
+    {
+      "src": "/api/analyze-risks",
+      "dest": "/api/analyze_risks.py"
     },
     {
       "src": "/(.*)",
-      "dest": "/api/index"
+      "dest": "/api/index.py"
     }
   ]
 }
