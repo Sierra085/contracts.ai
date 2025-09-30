@@ -72,45 +72,31 @@ async def home(request: Request):
     if templates:
         return templates.TemplateResponse("index.html", {"request": request})
     else:
-        # Fallback HTML with embedded interface
+        # Simple fallback HTML
         return HTMLResponse("""
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>contracts.ai - Contract Risk Analysis & Document Chat</title>
+            <title>contracts.ai</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-            <style>
-                html, body { height: 100%; }
-                body { background-color: #f8f9fa; }
-                .chat-container { overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem; background-color: white; min-height: 200px; max-height: 60vh; }
-                .text-preview { overflow-y: auto; font-size: 0.875rem; background-color: #f8f9fa; min-height: 100px; max-height: 150px; }
-                .message { margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; }
-                .user-message { background-color: #e3f2fd; border-left: 4px solid #2196f3; margin-left: 2rem; }
-                .ai-message { background-color: #f3e5f5; border-left: 4px solid #9c27b0; margin-right: 2rem; }
-                .loading { display: inline-block; width: 1rem; height: 1rem; border: 2px solid #f3f3f3; border-top: 2px solid #007bff; border-radius: 50%; animation: spin 1s linear infinite; }
-                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
         </head>
         <body>
-            <div class="container-fluid vh-100 d-flex flex-column">
+            <div class="container mt-4">
                 <div class="row">
-                    <div class="col-12 p-0">
-                        <nav class="navbar navbar-dark bg-primary">
-                            <div class="container-fluid">
-                                <span class="navbar-brand mb-0 h1">
-                                    <i class="fas fa-robot"></i> contracts.ai
-                                </span>
-                                <span class="navbar-text">Contract Risk Analysis & Document Chat with AI</span>
-                            </div>
-                        </nav>
+                    <div class="col-12">
+                        <h1 class="text-center mb-4">
+                            <i class="fas fa-robot text-primary"></i> contracts.ai
+                        </h1>
+                        <p class="text-center text-muted mb-4">Contract Risk Analysis & Document Chat with AI</p>
                     </div>
                 </div>
-                <div class="row flex-grow-1 mt-2">
-                    <div class="col-md-4 d-flex flex-column">
-                        <div class="card mb-3">
+                
+                <div class="row">
+                    <div class="col-md-6 mx-auto">
+                        <div class="card">
                             <div class="card-header">
                                 <h5><i class="fas fa-upload"></i> Upload Document</h5>
                             </div>
@@ -127,7 +113,7 @@ async def home(request: Request):
                                 <div id="uploadStatus" class="mt-3"></div>
                                 <div id="textPreview" class="mt-3" style="display: none;">
                                     <h6>Extracted Text Preview:</h6>
-                                    <div class="border p-2 text-preview">
+                                    <div class="border p-2" style="max-height: 150px; overflow-y: auto;">
                                         <small id="extractedText" class="text-muted"></small>
                                     </div>
                                 </div>
@@ -138,25 +124,22 @@ async def home(request: Request):
                                 </div>
                             </div>
                         </div>
-                        <div class="card flex-grow-1 d-flex flex-column">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><i class="fas fa-comments"></i> Chat with Document</h5>
-                                <button id="clearChat" class="btn btn-sm btn-outline-secondary">
-                                    <i class="fas fa-trash"></i> Clear
-                                </button>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5><i class="fas fa-comments"></i> Chat with Document</h5>
                             </div>
-                            <div class="card-body d-flex flex-column">
-                                <div id="chatMessages" class="flex-grow-1 mb-3 chat-container">
+                            <div class="card-body">
+                                <div id="chatMessages" style="height: 300px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1rem; margin-bottom: 1rem;">
                                     <div class="alert alert-info">
-                                        <i class="fas fa-info-circle"></i> 
-                                        Upload a document to start chatting with AI about its contents.
+                                        <i class="fas fa-info-circle"></i> Upload a document to start chatting.
                                     </div>
                                 </div>
                                 <div id="chatInputSection" style="display: none;">
                                     <form id="chatForm">
                                         <div class="input-group">
-                                            <input type="text" id="chatInput" class="form-control" placeholder="Ask a question about your document..." disabled>
-                                            <button type="submit" id="sendButton" class="btn btn-success" disabled>
+                                            <input type="text" id="chatInput" class="form-control" placeholder="Ask a question...">
+                                            <button type="submit" class="btn btn-success">
                                                 <i class="fas fa-paper-plane"></i>
                                             </button>
                                         </div>
@@ -164,28 +147,19 @@ async def home(request: Request):
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-8 d-flex flex-column">
-                        <div id="riskAnalysisResults" class="card flex-grow-1" style="display: none;">
+                        
+                        <div id="riskAnalysisResults" class="card mt-3" style="display: none;">
                             <div class="card-header">
-                                <h5 class="mb-0"><i class="fas fa-shield-alt"></i> Risk Analysis Results</h5>
+                                <h5><i class="fas fa-shield-alt"></i> Risk Analysis Results</h5>
                             </div>
                             <div class="card-body">
                                 <div id="riskAnalysisContent"></div>
                             </div>
                         </div>
-                        <div id="riskAnalysisPlaceholder" class="card flex-grow-1">
-                            <div class="card-body d-flex align-items-center justify-content-center">
-                                <div class="text-center text-muted">
-                                    <i class="fas fa-shield-alt fa-3x mb-3"></i>
-                                    <h5>Contract Risk Analysis</h5>
-                                    <p>Upload a contract document and click "Analyze Contract Risks" to see detailed risk assessment results here.</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
+
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
             <script>
                 let extractedText = '';
@@ -196,14 +170,11 @@ async def home(request: Request):
                 const extractedTextEl = document.getElementById('extractedText');
                 const chatMessages = document.getElementById('chatMessages');
                 const chatInput = document.getElementById('chatInput');
-                const sendButton = document.getElementById('sendButton');
                 const chatInputSection = document.getElementById('chatInputSection');
-                const clearChatBtn = document.getElementById('clearChat');
                 const riskAnalysisSection = document.getElementById('riskAnalysisSection');
                 const analyzeRisksBtn = document.getElementById('analyzeRisksBtn');
                 const riskAnalysisResults = document.getElementById('riskAnalysisResults');
                 const riskAnalysisContent = document.getElementById('riskAnalysisContent');
-                const riskAnalysisPlaceholder = document.getElementById('riskAnalysisPlaceholder');
 
                 uploadForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -217,7 +188,7 @@ async def home(request: Request):
                     }
                     
                     formData.append('file', file);
-                    showStatus('Extracting text from document...', 'info');
+                    showStatus('Extracting text...', 'info');
                     
                     try {
                         const response = await fetch('/extract', {
@@ -229,16 +200,16 @@ async def home(request: Request):
                         
                         if (response.ok) {
                             extractedText = result.text;
-                            showStatus(`✅ Successfully extracted text from ${file.name}`, 'success');
+                            showStatus('✅ Text extracted successfully!', 'success');
                             extractedTextEl.textContent = extractedText.substring(0, 300) + '...';
                             textPreview.style.display = 'block';
                             enableChat();
                             riskAnalysisSection.style.display = 'block';
                         } else {
-                            showStatus(`❌ Error: ${result.error}`, 'danger');
+                            showStatus('❌ Error: ' + result.error, 'danger');
                         }
                     } catch (error) {
-                        showStatus(`❌ Error uploading file: ${error.message}`, 'danger');
+                        showStatus('❌ Upload failed: ' + error.message, 'danger');
                     }
                 });
 
@@ -249,10 +220,8 @@ async def home(request: Request):
                     
                     addMessage(question, 'user');
                     chatInput.value = '';
-                    chatInput.disabled = true;
-                    sendButton.disabled = true;
                     
-                    const thinkingId = addMessage('<div class="loading"></div> AI is analyzing...', 'ai');
+                    const thinkingId = addMessage('🤔 AI is thinking...', 'ai');
                     
                     try {
                         const response = await fetch('/chat', {
@@ -267,23 +236,16 @@ async def home(request: Request):
                         if (response.ok) {
                             addMessage(result.answer, 'ai');
                         } else {
-                            addMessage(`<div class="alert alert-danger mb-0">${result.error}</div>`, 'ai');
+                            addMessage('❌ ' + result.error, 'ai');
                         }
                     } catch (error) {
                         document.getElementById(thinkingId).remove();
-                        addMessage(`<div class="alert alert-danger mb-0">❌ Network Error: ${error.message}</div>`, 'ai');
+                        addMessage('❌ Error: ' + error.message, 'ai');
                     }
-                    
-                    chatInput.disabled = false;
-                    sendButton.disabled = false;
-                    chatInput.focus();
                 });
 
                 analyzeRisksBtn.addEventListener('click', async () => {
-                    if (!extractedText) {
-                        showStatus('Please upload a document first.', 'warning');
-                        return;
-                    }
+                    if (!extractedText) return;
                     
                     analyzeRisksBtn.disabled = true;
                     analyzeRisksBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
@@ -300,47 +262,33 @@ async def home(request: Request):
                         if (response.ok) {
                             displayRiskAnalysis(result.analysis);
                             riskAnalysisResults.style.display = 'block';
-                            riskAnalysisPlaceholder.style.display = 'none';
                         } else {
-                            showStatus(`<div class="alert alert-danger mb-0">${result.error}</div>`, 'danger');
+                            showStatus('❌ ' + result.error, 'danger');
                         }
                     } catch (error) {
-                        showStatus(`<div class="alert alert-danger mb-0">❌ Network Error: ${error.message}</div>`, 'danger');
+                        showStatus('❌ Error: ' + error.message, 'danger');
                     }
                     
                     analyzeRisksBtn.disabled = false;
                     analyzeRisksBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Analyze Contract Risks';
                 });
 
-                clearChatBtn.addEventListener('click', () => {
-                    chatMessages.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> Chat cleared.</div>';
-                });
-
                 function showStatus(message, type) {
-                    uploadStatus.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+                    uploadStatus.innerHTML = '<div class="alert alert-' + type + '">' + message + '</div>';
                 }
 
                 function enableChat() {
-                    chatMessages.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Document loaded! Ask me anything.</div>';
+                    chatMessages.innerHTML = '<div class="alert alert-success">✅ Document loaded! Ask questions below.</div>';
                     chatInputSection.style.display = 'block';
-                    chatInput.disabled = false;
-                    sendButton.disabled = false;
-                    chatInput.focus();
                 }
 
                 function addMessage(content, sender) {
                     const messageId = 'msg-' + Date.now();
                     const isUser = sender === 'user';
-                    const icon = isUser ? 'fas fa-user' : 'fas fa-robot';
-                    const className = isUser ? 'user-message' : 'ai-message';
-                    const title = isUser ? 'You' : 'AI Assistant';
+                    const bgClass = isUser ? 'bg-light' : 'bg-primary text-white';
                     
-                    const messageHtml = `
-                        <div id="${messageId}" class="message ${className}">
-                            <div><i class="${icon}"></i> <strong>${title}:</strong></div>
-                            <div>${content}</div>
-                        </div>
-                    `;
+                    const messageHtml = '<div id="' + messageId + '" class="mb-2 p-2 rounded ' + bgClass + '">' +
+                        '<strong>' + (isUser ? '👤 You:' : '🤖 AI:') + '</strong><br>' + content + '</div>';
                     
                     chatMessages.insertAdjacentHTML('beforeend', messageHtml);
                     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -350,43 +298,23 @@ async def home(request: Request):
                 function displayRiskAnalysis(analysis) {
                     let html = '';
                     if (analysis.raw_analysis) {
-                        html = `<div class="alert alert-info"><h6>Risk Analysis:</h6><pre style="white-space: pre-wrap;">${analysis.raw_analysis}</pre></div>`;
+                        html = '<div class="alert alert-info"><h6>Risk Analysis:</h6><pre>' + analysis.raw_analysis + '</pre></div>';
                     } else {
-                        const riskLevelClass = getRiskLevelClass(analysis.overall_risk_level);
-                        html = `<div class="alert alert-${riskLevelClass}"><h6>Overall Risk Level: ${analysis.overall_risk_level || 'Unknown'}</h6></div>`;
+                        html = '<div class="alert alert-warning"><h6>Overall Risk: ' + (analysis.overall_risk_level || 'Unknown') + '</h6></div>';
                         
                         if (analysis.key_concerns && analysis.key_concerns.length > 0) {
-                            html += `<div class="alert alert-warning mb-3"><h6>Key Concerns</h6><ul class="mb-0">${analysis.key_concerns.map(concern => `<li>${concern}</li>`).join('')}</ul></div>`;
-                        }
-                        
-                        if (analysis.risk_categories && analysis.risk_categories.length > 0) {
-                            html += '<h6>Risk Categories</h6>';
-                            analysis.risk_categories.forEach(category => {
-                                const categoryClass = getRiskLevelClass(category.level);
-                                html += `
-                                    <div class="card mb-3">
-                                        <div class="card-header"><h6 class="mb-0"><span class="badge bg-${categoryClass}">${category.level || 'Unknown'}</span> ${category.category || 'Unknown Category'}</h6></div>
-                                        <div class="card-body"><p>${category.description || 'No description available'}</p></div>
-                                    </div>
-                                `;
+                            html += '<div class="alert alert-danger"><h6>Key Concerns:</h6><ul>';
+                            analysis.key_concerns.forEach(concern => {
+                                html += '<li>' + concern + '</li>';
                             });
+                            html += '</ul></div>';
                         }
                         
                         if (analysis.summary) {
-                            html += `<div class="alert alert-secondary"><h6>Summary</h6><p class="mb-0">${analysis.summary}</p></div>`;
+                            html += '<div class="alert alert-info"><h6>Summary:</h6><p>' + analysis.summary + '</p></div>';
                         }
                     }
                     riskAnalysisContent.innerHTML = html;
-                }
-
-                function getRiskLevelClass(level) {
-                    if (!level) return 'secondary';
-                    switch (level.toLowerCase()) {
-                        case 'low': return 'success';
-                        case 'medium': return 'warning';
-                        case 'high': return 'danger';
-                        default: return 'secondary';
-                    }
                 }
             </script>
         </body>
@@ -565,4 +493,6 @@ async def health():
     return {"status": "healthy", "gemini_configured": bool(GEMINI_API_KEY)}
 
 # For Vercel deployment
-handler = app
+from mangum import Mangum
+
+handler = Mangum(app)
