@@ -634,13 +634,13 @@ async def chat(req: ChatRequest):
         )
     
     try:
-        prompt = f"""You are an expert document assistant. Here is the extracted document data:
+        prompt = """You are an expert document assistant. Here is the extracted document data:
 
 {req.text}
 
 User question: {req.question}
 
-Please provide a helpful, accurate, and detailed answer based on the document content."""
+Please provide a helpful, accurate, and detailed answer based on the document content.""".format(req=req)
 
         model = genai.GenerativeModel("gemini-1.5-flash-latest")
         response = model.generate_content(prompt)
@@ -680,7 +680,7 @@ async def analyze_risks(req: RiskAnalysisRequest):
         )
     
     try:
-        prompt = f"""You are an expert legal analyst specializing in contract risk assessment. Analyze the following contract document and identify potential risk factors.
+        prompt = """You are an expert legal analyst specializing in contract risk assessment. Analyze the following contract document and identify potential risk factors.
 
 Contract Document:
 {req.text}
@@ -710,7 +710,7 @@ Focus on these risk categories:
 5. Reputation Risk (confidentiality, non-disparagement, publicity)
 6. Intellectual Property Risk (IP ownership, licensing, infringement)
 
-Be thorough but concise. Only return valid JSON."""
+Be thorough but concise. Only return valid JSON.""".format(req=req)
 
         model = genai.GenerativeModel("gemini-1.5-flash-latest")
         response = model.generate_content(prompt)
