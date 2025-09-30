@@ -6,13 +6,14 @@
 ![Python](https://img.shields.io/badge/Python-3.8+-green)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-red)
 ![AI](https://img.shields.io/badge/AI-Google%20Gemini-yellow)
+![Vercel](https://img.shields.io/badge/Deployment-Vercel-black)
 
 ## 🌟 Features
 
 ### 📄 **Document Processing**
 - **Multi-format Support**: Upload PDF and DOCX files
-- **OCR Technology**: Fallback text extraction using Tesseract OCR
-- **Real-time Progress**: Visual progress bars during processing
+- **Fast Text Extraction**: Efficient document processing
+- **Real-time Progress**: Visual feedback during processing
 
 ### ⚠️ **Risk Analysis**
 - **6 Risk Categories**: Financial, Performance, Legal/Compliance, Operational, Reputation, and IP risks
@@ -24,24 +25,25 @@
 - **Context-Aware**: AI understands your document content
 - **Real-time Responses**: Instant answers powered by Gemini AI
 
-### 📊 **Export & Reporting**
-- **PDF Export**: Generate professional risk analysis reports
-- **Comprehensive Reports**: Include all risk categories, recommendations, and summaries
-- **Professional Formatting**: Clean, structured PDF output
-
 ### 🎨 **Modern UI/UX**
-- **Responsive Design**: Works on desktop and mobile devices
-- **Progress Tracking**: Visual feedback for all operations
+- **Responsive Design**: Works perfectly on desktop and mobile devices
 - **Professional Interface**: Clean, intuitive design with Bootstrap styling
+- **Progressive Enhancement**: Works even without external dependencies
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Python 3.8 or higher
-- Google Gemini API key
-- Tesseract OCR (for PDF processing)
+### Option 1: Deploy to Vercel (Recommended)
 
-### Installation
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Sierra085/contracts.ai)
+
+1. Click the "Deploy with Vercel" button above
+2. Import your GitHub repository
+3. Add your `GEMINI_API_KEY` in environment variables
+4. Deploy! 🎉
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+
+### Option 2: Local Development
 
 1. **Clone the repository**
    ```bash
@@ -51,8 +53,8 @@
 
 2. **Create virtual environment**
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
 3. **Install dependencies**
@@ -68,12 +70,12 @@
 
 5. **Run the application**
    ```bash
-   uvicorn backend.main:app --host 127.0.0.1 --port 8001 --reload
+   uvicorn api.index:app --reload
    ```
 
 6. **Open in browser**
    ```
-   http://127.0.0.1:8001
+   http://localhost:8000
    ```
 
 ## 🔧 Configuration
@@ -87,23 +89,27 @@ GEMINI_API_KEY=your_google_gemini_api_key_here
 ### Getting a Gemini API Key
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Create a new API key
-3. Add it to your `.env` file
+3. Add it to your `.env` file or Vercel environment variables
 
 ## 📁 Project Structure
 
 ```
 contracts.ai/
+├── api/
+│   └── index.py            # Main FastAPI application (Vercel-ready)
 ├── backend/
-│   └── main.py              # FastAPI server and API endpoints
+│   └── main.py             # Alternative backend (local development)
 ├── static/
 │   ├── app.js              # Frontend JavaScript logic
 │   └── style.css           # Custom CSS styles
 ├── templates/
 │   └── index.html          # Main HTML template
 ├── app/
-│   └── main.py             # Alternative Streamlit version
+│   └── main.py             # Streamlit version
+├── vercel.json             # Vercel configuration
 ├── requirements.txt        # Python dependencies
 ├── .env.example           # Environment variables template
+├── DEPLOYMENT.md          # Deployment instructions
 └── README.md              # This file
 ```
 
@@ -111,10 +117,10 @@ contracts.ai/
 
 - **Backend**: FastAPI, Python 3.8+
 - **AI Engine**: Google Gemini API
-- **Document Processing**: PyPDF2, python-docx, Tesseract OCR
+- **Document Processing**: PyPDF2, python-docx
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **UI Framework**: Bootstrap 5
-- **PDF Generation**: jsPDF
+- **Deployment**: Vercel (serverless)
 - **Development**: Uvicorn, Auto-reload
 
 ## 📊 Risk Categories
@@ -132,23 +138,39 @@ contracts.ai analyzes contracts across 6 key risk areas:
 
 ### 1. Upload a Contract
 - Drag and drop or select PDF/DOCX files
-- Watch the progress bar during text extraction
+- Watch the progress during text extraction
 - View extracted text preview
 
 ### 2. Analyze Risks
 - Click "Analyze Contract Risks"
-- See detailed progress through analysis phases
 - Review comprehensive risk assessment
+- See detailed categories and recommendations
 
-### 3. Export Results
-- Click "Export PDF" in the risk analysis header
-- Download professional risk analysis report
-- Share or archive results
-
-### 4. Chat with Documents
+### 3. Chat with Documents
 - Ask questions about contract content
 - Get AI-powered answers and insights
 - Clear chat history as needed
+
+## 🌐 Deployment
+
+### Vercel Deployment (Recommended)
+
+This application is optimized for Vercel deployment:
+
+- ✅ Serverless-ready FastAPI application
+- ✅ Embedded HTML/CSS/JS (no static file dependencies)
+- ✅ Proper error handling for API limits
+- ✅ Environment variable configuration
+- ✅ Automatic Python runtime detection
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step deployment instructions.
+
+### Other Deployment Options
+
+- **Heroku**: Use `Procfile` with `web: uvicorn api.index:app --host=0.0.0.0 --port=${PORT:-5000}`
+- **Railway**: Works out of the box with the current setup
+- **DigitalOcean App Platform**: Deploy directly from GitHub
+- **AWS Lambda**: Use Mangum adapter for ASGI compatibility
 
 ## 🤝 Contributing
 
@@ -165,9 +187,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## ⚠️ Important Notes
 
 - **API Costs**: Google Gemini API usage may incur costs based on your usage
-- **Rate Limits**: Free tier has rate limits; consider upgrading for production use
+- **Rate Limits**: Free tier has rate limits; the app handles these gracefully
 - **Data Privacy**: Documents are processed temporarily and not stored permanently
-- **Dependencies**: Ensure Tesseract OCR is installed for PDF fallback processing
+- **Vercel Limits**: Be aware of Vercel's function execution time limits for large documents
 
 ## 🆘 Support
 
@@ -179,16 +201,17 @@ If you encounter any issues:
 
 ### Common Issues
 
-- **Tesseract not found**: Install Tesseract OCR for your system
-- **API key errors**: Verify your Gemini API key in `.env`
-- **Port conflicts**: Change the port in the uvicorn command
-- **Permission errors**: Ensure proper file permissions
+- **API key errors**: Verify your Gemini API key in environment variables
+- **Rate limit errors**: Wait a few minutes if you hit API limits
+- **Large file uploads**: Vercel has file size limits for uploads
+- **Function timeouts**: Large documents may take time to process
 
 ## 🎉 Acknowledgments
 
 - Google Gemini AI for powerful language processing
 - FastAPI for the excellent web framework
 - Bootstrap for responsive UI components
+- Vercel for seamless deployment platform
 - The open-source community for amazing libraries
 
 ---
@@ -196,3 +219,5 @@ If you encounter any issues:
 **Built with ❤️ by Sierra085**
 
 *Transform your contract analysis workflow with AI-powered insights*
+
+**🚀 Ready to deploy? [Click here to deploy to Vercel](https://vercel.com/new/clone?repository-url=https://github.com/Sierra085/contracts.ai)**
